@@ -1,16 +1,12 @@
 package org.numixproject.hermes;
 
-import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,10 +20,7 @@ import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.anjlab.android.iab.v3.BillingProcessor;
 import com.github.paolorotolo.expandableheightlistview.ExpandableHeightListView;
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.Tracker;
 import com.melnykov.fab.FloatingActionButton;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
@@ -51,13 +44,10 @@ import org.numixproject.hermes.model.Extra;
 import org.numixproject.hermes.model.Server;
 import org.numixproject.hermes.model.Status;
 import org.numixproject.hermes.receiver.ServerReceiver;
-import org.numixproject.hermes.utils.iap;
 
 public class MainActivity extends AppCompatActivity implements ServiceConnection, ServerListener, AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
     private static int instanceCount = 0;
     SharedPreferences prefs = null;
-    public static GoogleAnalytics analytics;
-    public static Tracker tracker;
     private static final int REQUEST_INVITE = 1;
     private IRCBinder binder;
     private ServerReceiver receiver;
@@ -67,7 +57,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private int positionBuffer;
     private FloatingActionButton fab = null;
     String key;
-    BillingProcessor bp;
 
     private Drawer result = null;
 
@@ -76,19 +65,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.home_fragment);
-
-        analytics = GoogleAnalytics.getInstance(this);
-        analytics.setLocalDispatchPeriod(1800);
-
-        tracker = analytics.newTracker("UA-63953479-1");
-        tracker.enableExceptionReporting(true);
-        tracker.enableAdvertisingIdCollection(true);
-        tracker.enableAutoActivityTracking(true);
-
-        key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA5B4Oomgmm2D8XVSxh1DIFGtU3p1N2w6Xi2ZO7MoeZRAhvVjk3B8MfrOatlO9HfozRGhEkCkq0MfstB4Cjci3dsnYZieNmHOVYIFBWERqdwfdtnUIfI554xFsAC3Ah7PTP3MwKE7qTT1VLTTHxxsE7GH4sLtvLwrAzsVrLK+dgQk+e9bDJMvhhEPBgabRFaTvKaTtSzB/BBwrCa5mv0pte6WfrNbugFjiAJC43b7NNY2PV9UA8mukiBNZ9mPrK5fZeSEfcVqenyqbvZZG+P+O/cohAHbIEzPMuAS1EBf0VBsZtm3fjQ45PgCvEB7Ye3ucfR9BQ9ADjDwdqivExvXndQIDAQAB";
-        iap inAppPayments = new iap();
-        bp = inAppPayments.getBilling(this, key);
-        bp.loadOwnedPurchasesFromGoogle();
 
         // Handle Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -129,11 +105,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                                                     }
                                                     break;
                                                 }
-                                                case "Remove ads": {
-                                                    removeAds();
-                                                    break;
-                                                }
-
                                                 case "Send feedback": {
                                                     Intent intent = new Intent(MainActivity.this, Gitty.class);
                                                     startActivity(intent);
@@ -152,9 +123,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                                         return false;
                                     }
                                 }).build();
-        if (!inAppPayments.isPurchased()) {
-            result.addItem(new PrimaryDrawerItem().withName("Remove ads").withIcon(R.drawable.ic_ic_dnd_on_24px));
-        }
         result.addItem(new PrimaryDrawerItem().withName("Send feedback").withIcon(R.drawable.ic_edit_black_18dp));
         result.addItem(new PrimaryDrawerItem().withName("Contact us").withIcon(R.drawable.ic_ic_mail_24px));
         result.addItem(new PrimaryDrawerItem().withName("More Apps").withIcon(R.drawable.ic_ic_shop_24px));
@@ -207,14 +175,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private void newAddServerActivity(View v){
         Intent intent = new Intent(this, AddServerActivity.class);
         startActivity(intent);
-    }
-
-    public void removeAds() {
-        bp.purchase(this, "remove_ads");
-    }
-
-    public BillingProcessor getIAP() {
-        return bp;
     }
 
     private void startIntro() {
@@ -446,8 +406,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (bp != null)
-            bp.release();
         instanceCount--;
     }
 
